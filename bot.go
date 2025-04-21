@@ -15,8 +15,6 @@ import (
 )
 
 var (
-
-	// @BotFather в телеграме даст вам это
 	BotToken   string
 	WebhookURL string
 
@@ -25,8 +23,9 @@ var (
 
 	storage = storageP.NewStorage()
 
-	errWrongFormat = "Неверный формат команды."
-	errNoTasks     = "Нет задач"
+	errWrongFormat    = "Неверный формат команды."
+	errWrongNewFormat = "Команда должна быть в формате: /new Текст"
+	errNoTasks        = "Нет задач"
 )
 
 func flagParse() {
@@ -57,6 +56,21 @@ func startTaskBot(ctx context.Context) error {
 		return fmt.Errorf("failed to start taskBot: %w", err)
 	}
 	log.Printf("Authorized as @%s", bot.Self.UserName)
+
+	commands := []tgbotapi.BotCommand{
+		{Command: "/tasks", Description: "Показать все задачи"},
+		{Command: "/new", Description: "Создать новую задачу"},
+		{Command: "/my", Description: "Мои задачи"},
+		{Command: "/owner", Description: "Созданные мной задачи"},
+		{Command: "/assign_id", Description: "Назначиться на задачу"},
+		{Command: "/unassign_id", Description: "Сняться с задачи"},
+		{Command: "/resolve_id", Description: "Завершить задачу"},
+	}
+
+	_, err = bot.Request(tgbotapi.NewSetMyCommands(commands...))
+	if err != nil {
+		return fmt.Errorf("SetMyCommands failed: %w", err)
+	}
 
 	// Устанавливаем webhook на URL
 	wh, err := tgbotapi.NewWebhook(WebhookURL)
@@ -110,7 +124,7 @@ func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		sendMsg(bot, chatID, buildTasks(userID))
 	case cmd == "/new":
 		if arg == "" {
-			sendMsg(bot, chatID, errWrongFormat)
+			sendMsg(bot, chatID, errWrongNewFormat)
 			return
 		}
 		id := storage.NewTask(arg, userID, username)

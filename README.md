@@ -1,1 +1,1 @@
-Bot is working on @tasksgoBot. Tests are hidden from private repository.
+Bot is working on @tasksgoBot. Tests are hidden from public repository.
